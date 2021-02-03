@@ -8,16 +8,16 @@ import numpy as np
 class UI:
     def __init__(self, vid):
         #--Interface Layout--
-        self.startBtnFrame = tk.Frame()
-        self.initialSamplesFrame = tk.Frame()
+            #self.autoLblFrame = tk.Frame()
+            #self.initialSamplesFrame = tk.Frame()
         self.optionsFrame = tk.Frame()
         self.manualSampelObjects = tk.Frame()
         self.videoFrame = tk.Frame()
         self.minUIWidth = 200
 
         #Grid used to add labels to the options menus
-        self.initialSamplesFrame.rowconfigure(0, minsize=50, weight=1)
-        self.initialSamplesFrame.columnconfigure([0, 1], minsize=50, weight=1)
+            #self.initialSamplesFrame.rowconfigure(0, minsize=50, weight=1)
+            #self.initialSamplesFrame.columnconfigure([0, 1], minsize=50, weight=1)
 
         self.manualSampelObjects.rowconfigure(0, minsize=50, weight=1)
         self.manualSampelObjects.columnconfigure([0, 1], minsize=50, weight=1)
@@ -30,57 +30,62 @@ class UI:
             height=vid.height
         )
 
-        #########--Seperator Line--#########
-        self.startSep = tk.Canvas(master=self.startBtnFrame, width=self.minUIWidth, height=4)
+        #########--Seperator (top gap)--#########
+        self.startSep = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
         ####################################
 
-        #Create start detection button
-        self.autoHasStarted = 0
-        self.startBtn = tk.Button(
-            master=self.startBtnFrame,
-            text="Start Auto Detection",
-            width=int(self.minUIWidth/8),
-            height=2,
-            command=self.start_auto
+        self.autoStatusLbl = tk.Label(
+            master=self.optionsFrame,
+            text="Automatic Detection (-ENGAGED-)",
         )
 
-        #########--Seperator Line--#########
-        self.sepLine = tk.Canvas(master=self.startBtnFrame, width=self.minUIWidth, height=4)
-        self.sepLine.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
-        ####################################
+            ##Create start detection button
+            #self.autoHasStarted = 0
+            #self.startBtn = tk.Button(
+            #    master=self.startBtnFrame,
+            #    text="Start Auto Detection",
+            #    width=int(self.minUIWidth/8),
+            #    height=2,
+            #    command=self.start_auto
+            #)
 
-        CAPTURES = list(range(1, 21))
-        DURATION = list(range(1, 31))
+            ##########--Seperator Line--#########
+            #self.sepLine = tk.Canvas(master=self.startBtnFrame, width=self.minUIWidth, height=4)
+            #self.sepLine.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+            #####################################
 
-        #Create drop down box for spesifiying the number of captures per second
-        self.capturesPerSecond = tk.StringVar(self.initialSamplesFrame)
-        self.capturesPerSecond.set(1)
+            #CAPTURES = list(range(1, 21))
+            #DURATION = list(range(1, 31))
 
-        self.cpsLbl = tk.Label(
-            master=self.initialSamplesFrame,
-            text="Captures Per Second",
-        )
+            ##Create drop down box for spesifiying the number of captures per second
+            #self.capturesPerSecond = tk.StringVar(self.initialSamplesFrame)
+            #self.capturesPerSecond.set(1)
 
-        self.cpsOpt = tk.OptionMenu(
-            self.initialSamplesFrame, 
-            self.capturesPerSecond, 
-            *CAPTURES
-        )
+            #self.cpsLbl = tk.Label(
+            #    master=self.initialSamplesFrame,
+            #    text="Captures Per Second",
+            #)
 
-        #Create drop down box for spesifiying how long samples are captured (seconds) 
-        self.captureDuration = tk.StringVar(self.initialSamplesFrame)
-        self.captureDuration.set(4)
+            #self.cpsOpt = tk.OptionMenu(
+            #    self.initialSamplesFrame, 
+            #    self.capturesPerSecond, 
+            #    *CAPTURES
+            #)
 
-        self.cdLbl = tk.Label(
-            master=self.initialSamplesFrame,
-            text="Captures Duration (Sec)",
-        )
+            ##Create drop down box for spesifiying how long samples are captured (seconds) 
+            #self.captureDuration = tk.StringVar(self.initialSamplesFrame)
+            #self.captureDuration.set(4)
 
-        self.cdOpt = tk.OptionMenu(
-            self.initialSamplesFrame, 
-            self.captureDuration, 
-            *DURATION
-        )
+            #self.cdLbl = tk.Label(
+            #    master=self.initialSamplesFrame,
+            #    text="Captures Duration (Sec)",
+            #)
+
+            #self.cdOpt = tk.OptionMenu(
+            #    self.initialSamplesFrame, 
+            #    self.captureDuration, 
+            #    *DURATION
+            #)
  
         #########--Seperator Line--#########
         self.sepLine1 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
@@ -194,7 +199,7 @@ class UI:
         MANUALOBJNUM = list(range(1, 5))
 
         #Create drop down box for spesifiying the number objects for manual detection
-        self.noOfModels = tk.StringVar(self.initialSamplesFrame)
+        self.noOfModels = tk.StringVar(self.manualSampelObjects)
         self.noOfModels.set(1)
 
         self.mObjectsLbl = tk.Label(
@@ -211,20 +216,21 @@ class UI:
 
         #--Dispay UI Elements--
         self.videoFrame.pack(side=tk.RIGHT)
-        self.startBtnFrame.pack()
-        self.initialSamplesFrame.pack()
+            #self.autoLblFrame.pack()
+            #self.initialSamplesFrame.pack()
         self.optionsFrame.pack()
         self.manualSampelObjects.pack()
 
         self.canvas.pack()
 
         self.startSep.pack()
-        self.startBtn.pack()
-        self.sepLine.pack()#------
-        self.cpsLbl.grid(row=0, column=0)
-        self.cpsOpt.grid(row=0, column=1)
-        self.cdLbl.grid(row=1, column=0)
-        self.cdOpt.grid(row=1, column=1)
+            #self.startBtn.pack()
+            #self.sepLine.pack()#------
+            #self.cpsLbl.grid(row=0, column=0)
+            #self.cpsOpt.grid(row=0, column=1)
+            #self.cdLbl.grid(row=1, column=0)
+            #self.cdOpt.grid(row=1, column=1)
+        self.autoStatusLbl.pack()
         self.sepLine1.pack()#------
         self.vividChk.pack()
         self.sepLine2.pack()#------
@@ -241,21 +247,21 @@ class UI:
         self.mObjectsLbl.grid(row=0, column=0)
         self.mObjectsOpt.grid(row=0, column=1)
 
-    def start_auto(self):
-        if self.autoHasStarted == 0 and self.manualHasStarted == 0:
-            #Inital print frame for sample based background removal
-            self.currentStartingFramesGot = 0
-            self.initialFrames = []
-            self.initialFrames.clear()
+    #def start_auto(self):
+    #    if self.autoHasStarted == 0 and self.manualHasStarted == 0:
+    #        #Inital print frame for sample based background removal
+    #        self.currentStartingFramesGot = 0
+    #        self.initialFrames = []
+    #        self.initialFrames.clear()
 
-            self.totalCapFramesNeeded = int(self.captureDuration.get()) * int(self.capturesPerSecond.get())
-            self.initialFramesGot = 0
+    #        self.totalCapFramesNeeded = int(self.captureDuration.get()) * int(self.capturesPerSecond.get())
+    #        self.initialFramesGot = 0
 
-            self.autoHasStarted = 1
-            self.startBtn.config(text="Stop Auto Detection")
-        else:
-            self.autoHasStarted = 0
-            self.startBtn.config(text="Start Auto Detection")
+    #        self.autoHasStarted = 1
+    #        self.startBtn.config(text="Stop Auto Detection")
+    #    else:
+    #        self.autoHasStarted = 0
+    #        self.startBtn.config(text="Start Auto Detection")
 
     def start_manual(self):
         if self.manualHasStarted == 0:
@@ -264,8 +270,8 @@ class UI:
             self.boxesGot = 0
 
             #Reset auto detection
-            self.autoHasStarted = 0
-            self.startBtn.config(text="Start Auto Detection")
+            #self.autoHasStarted = 0
+            self.autoStatusLbl.config(text="Automatic Detection (-OFF-)")
 
             self.manualHasStarted = 1
             self.manaulSelectBtn.config(text="Stop Manual Detection")

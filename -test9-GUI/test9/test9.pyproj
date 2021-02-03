@@ -24,7 +24,16 @@
     <Compile Include="applyFilters.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="automaticDetection.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="initialiseUI.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="initialisingFrame.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="manualDetection.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="readCapture.py">

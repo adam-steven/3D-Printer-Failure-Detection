@@ -4,9 +4,10 @@ import time
 
 #Filter out the irrelevent part of a given frame
 class ApFil:
-    def __init__(self, vid, ui):
+    def __init__(self, vid, ui, initFrame):
         self.vid = vid
         self.ui = ui
+        self.initFrame = initFrame
 
         #Timer
         self.hightPrev = 0.0
@@ -38,7 +39,7 @@ class ApFil:
         #Filter out the background 
         grayCFrame = cv2.cvtColor(croppedFrame, cv2.COLOR_BGR2GRAY)
         backFiltSum = grayCFrame
-        for x in self.ui.initialFrames:
+        for x in self.initFrame.initialFrames:
             diff = cv2.absdiff(x[self.topCut:bottomCut, leftCut:rightCut], grayCFrame)
             blur = cv2.GaussianBlur(diff, (5,5), 0)
             _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
