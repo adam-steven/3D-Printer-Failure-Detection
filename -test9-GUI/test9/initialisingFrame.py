@@ -3,7 +3,7 @@ import numpy as np
 
 #Start auto print detection, capture the inital print frame, and stop the auto print detection
 class InitFrames:
-    def __init__(self, vid, ui):
+    def __init__(self, vid, ui, filterFPS):
         self.vid = vid
         self.ui = ui
 
@@ -19,7 +19,9 @@ class InitFrames:
         self.motionDetectionCounter = 0
         self.printStartedCounter = 0
 
-        self.statusSwitchingThreshold = 5
+        #If timeBeforeSwitching = 5 (seconds) - self.statusSwitchingThreshold = 10 = timeBeforeSwitching * filterFPS
+        timeBeforeSwitching = 3 #seconds
+        self.statusSwitchingThreshold = timeBeforeSwitching * filterFPS
 
         self.currentAutoStatus = 0 # 0=ENGAGED, 1=STARTING, 2=DETECTING, 3=OFF 
 

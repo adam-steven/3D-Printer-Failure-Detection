@@ -15,17 +15,18 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-        self.vid = readCapture.VideoCapture(video_source)
-        self.ui = initialiseUI.UI(self.vid)
-        self.initFrame = initialisingFrame.InitFrames(self.vid, self.ui)
-        self.automatic = automaticDetection.AutoDect(self.vid, self.ui, self.initFrame)
-        self.manual = manualDetection.ManualDetcAndTrak(self.vid, self.ui)
-
-
-        #Timer
+        #Set timer
         self.scanPrev = 0.0
         self.filterFPS = 2
 
+        #Set classes
+        self.vid = readCapture.VideoCapture(video_source)
+        self.ui = initialiseUI.UI(self.vid)
+        self.initFrame = initialisingFrame.InitFrames(self.vid, self.ui, self.filterFPS)
+        self.automatic = automaticDetection.AutoDect(self.vid, self.ui, self.initFrame, self.filterFPS)
+        self.manual = manualDetection.ManualDetcAndTrak(self.vid, self.ui)
+
+        #Set frame top crop
         self.topCut = 0
 
         #Update Camera Frame
@@ -74,10 +75,13 @@ class App:
                 return grayNFrame
             elif self.initFrame.currentAutoStatus == 2:
                 self.initFrame.stopped_motion_scan()
-                self.topCut = self.automatic.get_contours(frame)
-                
-        drawnOnFrame = self.automatic.draw_detection_results(frame)        
+                self.topCut, objectLost = self.automatic.get_contours(frame)
+        
+        if objectLost:
+            print ("FAIL")
 
+        #Give the appropriate info on GUI camera view 
+        drawnOnFrame = self.automatic.draw_detection_results(frame)        
         drawnOnFrame = cv2.addWeighted(drawnOnFrame, 0.8, cropImg, 0.2, 0)
         return cv2.cvtColor(drawnOnFrame, cv2.COLOR_BGR2RGB)
 
