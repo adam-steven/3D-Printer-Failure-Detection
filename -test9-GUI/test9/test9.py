@@ -3,12 +3,14 @@ from PIL import Image, ImageTk
 import cv2
 import numpy as np
 import time
+import math
 
 import readCapture
 import initialiseUI
 import initialisingFrame
 import automaticDetection
 import manualDetection
+import failureAlert
 
 class App:
     def __init__(self, window, window_title, video_source=0):
@@ -25,9 +27,13 @@ class App:
         self.initFrame = initialisingFrame.InitFrames(self.vid, self.ui, self.filterFPS)
         self.automatic = automaticDetection.AutoDect(self.vid, self.ui, self.initFrame, self.filterFPS)
         self.manual = manualDetection.ManualDetcAndTrak(self.vid, self.ui)
+        self.fAlert = failureAlert.FailAlert(self.vid)
 
         #Set frame top crop
         self.topCut = 0
+
+        #object failure startus
+        self.objFail = False
 
         #Update Camera Frame
         self.delay = 15
@@ -39,18 +45,35 @@ class App:
         #Get a frame from the video source
         ret, frame = self.vid.get_frame()
 
-        if self.ui.manualHasStarted == 0:
-            frame = self.scan(frame)
-        else:
-            frame = self.manual_detection(frame)
-
-
         if ret:
-            self.photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
-            self.ui.canvas.create_image(0, 0, image = self.photo, anchor = tk.NW)
+            if self.ui.manualHasStarted == 0:
+                frame = self.scan(frame)
+            else:
+                frame = self.manual_detection(frame)
 
-        if self.ui.simetricalXcut.get() == 1:
-            self.ui.cutRightScl.set(self.ui.cutLeftScl.get())
+            if self.ui.autoSensitivityChange:
+                boxSides = round(math.sqrt(self.ui.sensitivityScl.get()))
+                x = int(self.vid.width/2 - boxSides/2)
+                y = int(self.vid.height/2 - boxSides/2)
+                cv2.rectangle(frame, (x, y), (boxSides+x,boxSides+y), (255, 255, 255), 2)
+                self.ui.autoSensitivityChange = False
+
+            if self.ui.failureRangeChange:
+                cv2.line(frame, (int(self.vid.width/2), 0), (int(self.vid.width/2),int(self.vid.height)), (255, 0, 0), 2)
+                cv2.line(frame, (int(self.vid.width/2 - self.ui.failureRangeScl.get()), 0), (int(self.vid.width/2 - self.ui.failureRangeScl.get()),int(self.vid.height)), (0, 255, 0), 2)
+                cv2.line(frame, (int(self.vid.width/2 + self.ui.failureRangeScl.get()), 0), (int(self.vid.width/2 + self.ui.failureRangeScl.get()),int(self.vid.height)), (0, 255, 0), 2)
+                self.ui.failureRangeChange = False
+
+            if self.objFail == True:
+                self.fAlert.alert(frame)
+                self.objFail = False
+
+            if ret:
+                self.photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
+                self.ui.canvas.create_image(0, 0, image = self.photo, anchor = tk.NW)
+
+            if self.ui.simetricalXcut.get() == 1:
+                self.ui.cutRightScl.set(self.ui.cutLeftScl.get())
 
         self.window.after(self.delay, self.update)
 
@@ -75,10 +98,7 @@ class App:
                 return grayNFrame
             elif self.initFrame.currentAutoStatus == 2:
                 self.initFrame.stopped_motion_scan()
-                self.topCut, objectLost = self.automatic.get_contours(frame)
-        
-        if objectLost:
-            print ("FAIL")
+                self.topCut, self.objFail = self.automatic.get_contours(frame)
 
         #Give the appropriate info on GUI camera view 
         drawnOnFrame = self.automatic.draw_detection_results(frame)        
@@ -87,13 +107,13 @@ class App:
 
     def manual_detection(self, frame):
         if self.ui.boxesGot == 1:
-            frame = self.manual.manual_tracking(frame)
+            editedframe, self.objFail = self.manual.manual_tracking(frame)
         else:
             #Stop automatic detection
             self.initFrame.manual_off()
-            frame = self.manual.manual_object_seletion(frame)
+            editedframe = self.manual.manual_object_seletion(frame)
 
-        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return cv2.cvtColor(editedframe, cv2.COLOR_BGR2RGB)
 
 
 #Create a window and pass it to the Application object

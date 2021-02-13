@@ -18,11 +18,16 @@ class AutoDect:
         self.topCut = 15
 
         #If potential object exists for minsBeforeCertain (seconds) its a definite object - i.e defObjectConFrames = minsBeforeCertain * filterFPS
-        minsBeforeCertain = 60 #seconds
-        self.defObjectConFrames = filterFPS * minsBeforeCertain
+        self.filterFPS = filterFPS
+        self.defObjectConFrames = 1
+        self.failureCenterRange = 30
 
 
     def get_contours(self, frame):
+
+        self.defObjectConFrames = self.filterFPS * self.ui.certianTimeScl.get()
+        self.failureCenterRange = self.ui.failureRangeScl.get()
+
         leftCut = self.ui.cutLeftScl.get()
         self.currentDetectedContours.clear() #FOR TESTING REMOVE LATER
         #Filter current frame
@@ -195,11 +200,12 @@ class AutoDect:
             if intersect:
 
                 #Check if the object centers are in the same sector (10 sectors)
-                contourLineOnScreen = round(((contourRect[0] + (contourRect[2]/2))/self.vid.width) * 10) 
-                objectLineOnScreen = round(((dObject[0][0] + (dObject[0][2]/2))/self.vid.width) * 10) 
+                contourLineOnScreen = int(contourRect[0] + (contourRect[2]/2))
+                objectLineOnScreen = int(dObject[0][0] + (dObject[0][2]/2))
 
-                if intersectWidth > int(dObject[0][2]/2) and intersectHeight > int(dObject[0][3]/2) and contourLineOnScreen == objectLineOnScreen:
-                    dObject[1] = self.defObjectConFrames 
+                if intersectWidth > int(dObject[0][2]/2) and intersectHeight > int(dObject[0][3]/2):
+                    if objectLineOnScreen - self.failureCenterRange < contourLineOnScreen < objectLineOnScreen + self.failureCenterRange:
+                        dObject[1] = self.defObjectConFrames 
 
                 return False
 

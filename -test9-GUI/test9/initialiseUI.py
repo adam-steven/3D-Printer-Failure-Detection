@@ -7,8 +7,15 @@ import numpy as np
 #Initilise and handle tkinter ui elements
 class UI:
     def __init__(self, vid):
+
+        #Bools to give GUI indecation when sliders are used 
+        self.autoSensitivityChange = False
+        self.failureRangeChange = False
+
+        #Initialise GUI containors
         self.optionsFrame = tk.Frame()
         self.manualSampelObjects = tk.Frame()
+        self.universalSetting = tk.Frame()
         self.videoFrame = tk.Frame()
         self.minUIWidth = 200
 
@@ -26,16 +33,17 @@ class UI:
 
         #########--Seperator (top gap)--#########
         self.startSep = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
+        self.startSep.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         self.autoStatusLbl = tk.Label(
             master=self.optionsFrame,
-            text="Automatic Detection (-ENGAGED-)",
+            text="Automatic Detection (-ENGAGED-)"
         )
 
         #########--Seperator Line--#########
         self.sepLine1 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine1.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        self.sepLine1.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         #Create check box to ignod dull colour (aka. the printer)
@@ -57,12 +65,13 @@ class UI:
         #Create slider for BLOB area threshold
         self.sensitivityScl = tk.Scale(
             master=self.optionsFrame,
-            label="Sensitivity",
+            label="Object Size Threshold (Area)",
             from_=200, 
             to=2000,
             sliderlength=20, 
             length=self.minUIWidth,
-            orient= tk.HORIZONTAL
+            orient= tk.HORIZONTAL,
+            command=self.auto_sensitivity_change
         )
         self.sensitivityScl.set(400)
 
@@ -122,6 +131,12 @@ class UI:
         self.sepLine4 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
         self.sepLine4.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
         ####################################
+
+        self.manualLbl = tk.Label(
+            master=self.optionsFrame,
+            text="Manual Detection"
+        )
+
         #########--Seperator Line--#########
         self.sepLine5 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
         self.sepLine5.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
@@ -159,16 +174,62 @@ class UI:
             *MANUALOBJNUM
         )
 
+        #########--Seperator Line--#########
+        self.sepLine7 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
+        self.sepLine7.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        ####################################
+
+        self.universalLbl = tk.Label(
+            master=self.universalSetting,
+            text="Universal Setting"
+        )
+
+        #########--Seperator Line--#########
+        self.sepLine8 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
+        self.sepLine8.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        ####################################
+
+        #Create slider to indicate to time before certain
+        self.certianTimeScl = tk.Scale(
+            master=self.universalSetting,
+            label="Time Before Failure Is Certain (Secs)",
+            from_=5, 
+            to=300,
+            sliderlength=20, 
+            length=self.minUIWidth,
+            orient= tk.HORIZONTAL
+        )
+        self.certianTimeScl.set(60)
+
+        #########--Seperator Line--#########
+        self.sepLine9 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
+        self.sepLine9.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        ####################################
+
+        #Create slider to indicate to time before certain
+        self.failureRangeScl = tk.Scale(
+            master=self.universalSetting,
+            label="Horizontal Failure Range",
+            from_=5, 
+            to=100,
+            sliderlength=20, 
+            length=self.minUIWidth,
+            orient= tk.HORIZONTAL,
+            command=self.failure_range_change
+        )
+        self.failureRangeScl.set(30)
+
 
         #--Dispay UI Elements--
         self.videoFrame.pack(side=tk.RIGHT)
         self.optionsFrame.pack()
         self.manualSampelObjects.pack()
+        self.universalSetting.pack()
 
         self.canvas.pack()
 
-        self.startSep.pack()
-        self.autoStatusLbl.pack()
+        self.startSep.pack()#-------
+        self.autoStatusLbl.pack()#
         self.sepLine1.pack()#------
         self.vividChk.pack()
         self.sepLine2.pack()#------
@@ -179,17 +240,25 @@ class UI:
         self.cutLeftScl.pack()
         self.cutRightScl.pack()
         self.sepLine4.pack()#------
+        self.manualLbl.pack()#
         self.sepLine5.pack()#------
         self.manaulSelectBtn.pack()
         self.sepLine6.pack()#------
         self.mObjectsLbl.grid(row=0, column=0)
         self.mObjectsOpt.grid(row=0, column=1)
+        self.sepLine7.pack()#------
+        self.universalLbl.pack()#
+        self.sepLine8.pack()#------
+        self.certianTimeScl.pack()
+        self.sepLine9.pack()#------
+        self.failureRangeScl.pack()
 
     def start_manual(self):
         if self.manualHasStarted == 0:
             #Inital print frame for sample based background removal
             self.multiTracker = cv2.MultiTracker_create()
             self.boxesGot = 0
+            self.objectCentrePositions = []
 
             #Reset auto detection
             self.autoStatusLbl.config(text="Automatic Detection (-OFF-)")
@@ -200,4 +269,11 @@ class UI:
             self.manualHasStarted = 0
             self.manaulSelectBtn.config(text="Start Manual Detection")
             self.multiTracker.clear()
+            self.objectCentrePositions.clear()
 
+
+    def auto_sensitivity_change(self, value):
+        self.autoSensitivityChange = True
+
+    def failure_range_change(self, value):
+        self.failureRangeChange = True
