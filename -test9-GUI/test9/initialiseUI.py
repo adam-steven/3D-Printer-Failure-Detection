@@ -2,15 +2,15 @@ import tkinter as tk
 import numpy as np
 from PIL import Image, ImageTk
 import cv2
-import numpy as np
 
 #Initilise and handle tkinter ui elements
 class UI:
-    def __init__(self, vid):
+    def __init__(self, vidWidth, vidHeight, uiVals):
+
+        self.uiVals = uiVals
 
         #Bools to give GUI indecation when sliders are used 
-        self.autoSensitivityChange = False
-        self.failureRangeChange = False
+        self.valuesChange = False
 
         #Initialise GUI containors
         self.optionsFrame = tk.Frame()
@@ -27,8 +27,8 @@ class UI:
         #Create canvas from video source
         self.canvas = tk.Canvas(
             master=self.videoFrame, 
-            width=vid.width, 
-            height=vid.height
+            width=vidWidth, 
+            height=vidHeight
         )
 
         #########--Seperator (top gap)--#########
@@ -46,15 +46,15 @@ class UI:
         self.sepLine1.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
-        #Create check box to ignod dull colour (aka. the printer)
+        #Create check box to ignore dull colour (aka. the printer)
         self.vivid = tk.IntVar()
-        self.vivid.set(120)
         self.vividChk = tk.Checkbutton(
             master=self.optionsFrame, 
             text='Vivid Colour Mode',
             variable=self.vivid,
             onvalue=180,
-            offvalue=120
+            offvalue=120,
+            command=self.update_ui_vals
         )
 
         #########--Seperator Line--#########
@@ -71,9 +71,8 @@ class UI:
             sliderlength=20, 
             length=self.minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.auto_sensitivity_change
+            command=self.update_ui_vals
         )
-        self.sensitivityScl.set(400)
 
         #########--Seperator Line--#########
         self.sepLine3 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
@@ -85,12 +84,12 @@ class UI:
             master=self.optionsFrame,
             label="Cut Off Bottom",
             from_=0, 
-            to=(vid.height/2)-10,
+            to=int(vidHeight/2)-10,
             sliderlength=20, 
             length=self.minUIWidth,
-            orient= tk.HORIZONTAL
+            orient= tk.HORIZONTAL,
+            command=self.update_ui_vals
         )
-        self.cutBottomScl.set((vid.height/2)-200)
 
         #Create check box to set cutRightScl to cutLeftScl
         self.simetricalXcut = tk.IntVar()
@@ -98,34 +97,34 @@ class UI:
             master=self.optionsFrame, 
             text='Simetrical X Cut Off',
             variable=self.simetricalXcut,
-            onvalue=1,
-            offvalue=0
+            onvalue=True,
+            offvalue=False
         )
-        self.simetricalXcut.set(1)
+        self.simetricalXcut.set(True)
 
         #Create slider to cut of the videos left side
         self.cutLeftScl = tk.Scale(
             master=self.optionsFrame,
             label="Cut Off Left",
             from_=0, 
-            to=(vid.width/2)-10,
+            to=int(vidWidth/2)-10,
             sliderlength=20, 
             length=self.minUIWidth,
-            orient= tk.HORIZONTAL
+            orient= tk.HORIZONTAL,
+            command=self.update_ui_vals
         )
-        self.cutLeftScl.set(500)
 
         #Create slider to cut of the videos right side
         self.cutRightScl = tk.Scale(
             master=self.optionsFrame,
             label="Cut Off Right",
             from_=0, 
-            to=(vid.width/2)-10,
+            to=int(vidWidth/2)-10,
             sliderlength=20, 
             length=self.minUIWidth,
-            orient= tk.HORIZONTAL
+            orient= tk.HORIZONTAL,
+            command=self.update_ui_vals
         )
-        self.cutRightScl.set(500)
 
         #########--Seperator Line--#########
         self.sepLine4 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
@@ -143,7 +142,8 @@ class UI:
         ####################################
 
         #Create Button for "user manually selects the modle"
-        self.manualHasStarted = 0
+        self.manualHasStarted = False
+        self.manualHasStopped = False
         self.manaulSelectBtn = tk.Button(
             master=self.optionsFrame,
             text="Start Manual Detection",
@@ -161,7 +161,6 @@ class UI:
 
         #Create drop down box for spesifiying the number objects for manual detection
         self.noOfModels = tk.StringVar(self.manualSampelObjects)
-        self.noOfModels.set(1)
 
         self.mObjectsLbl = tk.Label(
             master=self.manualSampelObjects,
@@ -171,7 +170,8 @@ class UI:
         self.mObjectsOpt = tk.OptionMenu(
             self.manualSampelObjects, 
             self.noOfModels, 
-            *MANUALOBJNUM
+            *MANUALOBJNUM,
+            command=self.update_ui_vals
         )
 
         #########--Seperator Line--#########
@@ -192,14 +192,14 @@ class UI:
         #Create slider to indicate to time before certain
         self.certianTimeScl = tk.Scale(
             master=self.universalSetting,
-            label="Time Before Failure Is Certain (Secs)",
+            label="Time Before Dection Is Certain (Secs)",
             from_=5, 
-            to=300,
+            to=120,
             sliderlength=20, 
             length=self.minUIWidth,
-            orient= tk.HORIZONTAL
+            orient= tk.HORIZONTAL,
+            command=self.update_ui_vals
         )
-        self.certianTimeScl.set(60)
 
         #########--Seperator Line--#########
         self.sepLine9 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
@@ -215,18 +215,17 @@ class UI:
             sliderlength=20, 
             length=self.minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.failure_range_change
+            command=self.update_ui_vals
         )
-        self.failureRangeScl.set(30)
 
+        #set the intrface starting values 
+        self.update_ui_interface()
 
         #--Dispay UI Elements--
         self.videoFrame.pack(side=tk.RIGHT)
         self.optionsFrame.pack()
         self.manualSampelObjects.pack()
         self.universalSetting.pack()
-
-        self.canvas.pack()
 
         self.startSep.pack()#-------
         self.autoStatusLbl.pack()#
@@ -253,27 +252,48 @@ class UI:
         self.sepLine9.pack()#------
         self.failureRangeScl.pack()
 
+        self.canvas.pack()
+
     def start_manual(self):
         if self.manualHasStarted == 0:
-            #Inital print frame for sample based background removal
-            self.multiTracker = cv2.MultiTracker_create()
-            self.boxesGot = 0
-            self.objectCentrePositions = []
-
-            #Reset auto detection
-            self.autoStatusLbl.config(text="Automatic Detection (-OFF-)")
-
-            self.manualHasStarted = 1
+            self.manualHasStarted = True
             self.manaulSelectBtn.config(text="Stop Manual Detection")
-        elif self.boxesGot == 1:
-            self.manualHasStarted = 0
+        else:
+            self.manualHasStopped = True
             self.manaulSelectBtn.config(text="Start Manual Detection")
-            self.multiTracker.clear()
-            self.objectCentrePositions.clear()
 
+    #change the values for the gui interface options
+    def update_ui_interface(self): 
+        vivid, certianTimeScl, failureRangeScl, cutLeftScl, cutRightScl, cutBottomScl, sensitivityScl, noOfModels = self.uiVals.get_vals()
 
-    def auto_sensitivity_change(self, value):
-        self.autoSensitivityChange = True
+        self.vivid.set(vivid)
+        self.sensitivityScl.set(sensitivityScl)
+        self.cutBottomScl.set(cutBottomScl)
+        self.cutLeftScl.set(cutLeftScl)
+        self.cutRightScl.set(cutRightScl)
+        self.noOfModels.set(noOfModels)
+        self.certianTimeScl.set(certianTimeScl)
+        self.failureRangeScl.set(failureRangeScl)
 
-    def failure_range_change(self, value):
-        self.failureRangeChange = True
+    #change the values of the uiValues class
+    def update_ui_vals(self, value=0):
+
+        self.valuesChange = True
+
+        vivid = self.vivid.get()
+        certianTimeScl = self.certianTimeScl.get()
+        failureRangeScl = self.failureRangeScl.get()
+        cutLeftScl = self.cutLeftScl.get()
+        cutRightScl = self.cutRightScl.get()
+        cutBottomScl = self.cutBottomScl.get()
+        sensitivityScl = self.sensitivityScl.get()
+        noOfModels = self.noOfModels.get()
+
+        #lock the two vertical sliders
+        if self.simetricalXcut.get() == True:
+            self.cutRightScl.set(cutLeftScl)
+            cutRightScl = cutLeftScl
+
+        self.uiVals.set_vals(vivid, certianTimeScl, failureRangeScl, cutLeftScl, cutRightScl, cutBottomScl, sensitivityScl, noOfModels)
+
+    

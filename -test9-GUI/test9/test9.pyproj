@@ -27,6 +27,9 @@
     <Compile Include="automaticDetection.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="detectedObject.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="failureAlert.py">
       <SubType>Code</SubType>
     </Compile>
@@ -43,6 +46,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="test9.py" />
+    <Compile Include="uiValues.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
