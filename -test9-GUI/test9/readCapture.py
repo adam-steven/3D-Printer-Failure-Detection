@@ -1,5 +1,5 @@
 import cv2
-import numpy as np
+import constants
 
 #OpenCV Video Retrieval
 class VideoCapture:
@@ -11,8 +11,8 @@ class VideoCapture:
             raise ValueError("Unable to open video source", video_source)
 
         #Set video source width and height
-        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
-        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, constants.FRAME_WIDTH)
+        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, constants.FRAME_HEIGHT)
 
         #Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)

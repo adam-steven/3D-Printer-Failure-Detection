@@ -1,15 +1,6 @@
 import cv2
-import numpy as np
 import time
-
-#start
-     #self.multiTracker = cv2.MultiTracker_create()
-     #self.boxesGot = 0
-     #self.objectCentrePositions = []
-
-#stop
-        #self.multiTracker.clear()
-        #self.objectCentrePositions.clear()
+import constants
 
 #User selects the object to be auto tracked 
 class ManualDetcAndTrak:
@@ -17,7 +8,6 @@ class ManualDetcAndTrak:
         self.scanPrev = 0.0
 
         self.manualSizeDown = 2
-        self.manualFPS = 25
 
         self.vidWidth = vidWidth
         self.vidHeight = vidHeight
@@ -29,7 +19,7 @@ class ManualDetcAndTrak:
         self.objectCentrePositions = []
 
         #If potential object exists for minsBeforeCertain (seconds) its a definite object - i.e defObjectConFail = minsBeforeCertain * filterFPS
-        self.defObjectFail = self.manualFPS * 10
+        self.defObjectFail = constants.MANUAL_FPS * constants.FAILER_TIMER
         self.failureCenterRange = failureCenterRange
 
     def set_ui_values(self, failureCenterRange):
@@ -73,7 +63,7 @@ class ManualDetcAndTrak:
 
         time_elapsed = time.time() - self.scanPrev
 
-        if time_elapsed > 1./self.manualFPS:
+        if time_elapsed > 1./constants.MANUAL_FPS:
 
             copyFrame = cv2.resize(copyFrame,(self.resizedWidth, self.resizedHeight),fx=0,fy=0, interpolation = cv2.INTER_LINEAR)
             self.scanPrev = time.time()

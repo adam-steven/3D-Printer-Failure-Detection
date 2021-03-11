@@ -2,7 +2,7 @@ class UIVals:
     def __init__(self, vidWidth, vidHeight):
         self.vivid = 120
         self.certianTimeScl = 30
-        self.failureRangeScl = 30 
+        self.failureRangeScl = 15
         self.cutLeftScl = int((vidWidth/2)/2)
         self.cutRightScl = int((vidWidth/2)/2)
         self.cutBottomScl = int((vidHeight/2)/3)

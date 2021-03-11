@@ -1,7 +1,4 @@
 import tkinter as tk
-import numpy as np
-from PIL import Image, ImageTk
-import cv2
 
 #Initilise and handle tkinter ui elements
 class UI:
@@ -13,43 +10,43 @@ class UI:
         self.valuesChange = False
 
         #Initialise GUI containors
-        self.optionsFrame = tk.Frame()
-        self.manualSampelObjects = tk.Frame()
-        self.universalSetting = tk.Frame()
-        self.videoFrame = tk.Frame()
-        self.minUIWidth = 200
+        guiContatianer = tk.Frame()
+        feedContatianer = tk.Frame()
 
-        #Grid used to add labels to the options menus
-        self.manualSampelObjects.rowconfigure(0, minsize=50, weight=1)
-        self.manualSampelObjects.columnconfigure([0, 1], minsize=50, weight=1)
+        optionsFrame = tk.Frame(guiContatianer)
+        manualSampelObjects = tk.Frame(guiContatianer)
+        universalSetting = tk.Frame(guiContatianer)
+        videoFrame = tk.Frame(feedContatianer)
+        minUIWidth = 200
+
 
         #--Initialise UI Elements--
         #Create canvas from video source
         self.canvas = tk.Canvas(
-            master=self.videoFrame, 
+            master=videoFrame, 
             width=vidWidth, 
             height=vidHeight
         )
 
         #########--Seperator (top gap)--#########
-        self.startSep = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.startSep.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        startSep = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        startSep.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         self.autoStatusLbl = tk.Label(
-            master=self.optionsFrame,
+            master=optionsFrame,
             text="Automatic Detection (-ENGAGED-)"
         )
 
         #########--Seperator Line--#########
-        self.sepLine1 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine1.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        sepLine1 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine1.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         #Create check box to ignore dull colour (aka. the printer)
         self.vivid = tk.IntVar()
         self.vividChk = tk.Checkbutton(
-            master=self.optionsFrame, 
+            master=optionsFrame, 
             text='Vivid Colour Mode',
             variable=self.vivid,
             onvalue=180,
@@ -58,43 +55,43 @@ class UI:
         )
 
         #########--Seperator Line--#########
-        self.sepLine2 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine2.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        sepLine2 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine2.create_rectangle(0, 1, minUIWidth, 2, fill="black", outline = 'black')
         ####################################
 
         #Create slider for BLOB area threshold
         self.sensitivityScl = tk.Scale(
-            master=self.optionsFrame,
+            master=optionsFrame,
             label="Object Size Threshold (Area)",
             from_=200, 
             to=2000,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.update_ui_vals
+            command=self.update_sensitivity
         )
 
         #########--Seperator Line--#########
-        self.sepLine3 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine3.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        sepLine3 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine3.create_rectangle(0, 1, minUIWidth, 2, fill="black", outline = 'black')
         ####################################
 
         #Create slider to cut of the videos bottom
         self.cutBottomScl = tk.Scale(
-            master=self.optionsFrame,
+            master=optionsFrame,
             label="Cut Off Bottom",
             from_=0, 
             to=int(vidHeight/2)-10,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.update_ui_vals
+            command=self.update_crop
         )
 
         #Create check box to set cutRightScl to cutLeftScl
-        self.simetricalXcut = tk.IntVar()
+        self.simetricalXcut = tk.BooleanVar()
         self.simetricalXcutScl = tk.Checkbutton(
-            master=self.optionsFrame, 
+            master=optionsFrame, 
             text='Simetrical X Cut Off',
             variable=self.simetricalXcut,
             onvalue=True,
@@ -104,152 +101,155 @@ class UI:
 
         #Create slider to cut of the videos left side
         self.cutLeftScl = tk.Scale(
-            master=self.optionsFrame,
+            master=optionsFrame,
             label="Cut Off Left",
             from_=0, 
             to=int(vidWidth/2)-10,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.update_ui_vals
+            command=self.update_crop
         )
 
         #Create slider to cut of the videos right side
         self.cutRightScl = tk.Scale(
-            master=self.optionsFrame,
+            master=optionsFrame,
             label="Cut Off Right",
             from_=0, 
             to=int(vidWidth/2)-10,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.update_ui_vals
+            command=self.update_crop
         )
 
         #########--Seperator Line--#########
-        self.sepLine4 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine4.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        sepLine4 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine4.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
-        self.manualLbl = tk.Label(
-            master=self.optionsFrame,
+        manualLbl = tk.Label(
+            master=optionsFrame,
             text="Manual Detection"
         )
 
         #########--Seperator Line--#########
-        self.sepLine5 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine5.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        sepLine5 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine5.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         #Create Button for "user manually selects the modle"
         self.manualHasStarted = False
         self.manualHasStopped = False
         self.manaulSelectBtn = tk.Button(
-            master=self.optionsFrame,
+            master=optionsFrame,
             text="Start Manual Detection",
-            width=int(self.minUIWidth/8),
+            width=int(minUIWidth/8),
             height=2,
             command=self.start_manual
         )
 
         #########--Seperator Line--#########
-        self.sepLine6 = tk.Canvas(master=self.optionsFrame, width=self.minUIWidth, height=4)
-        self.sepLine6.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        sepLine6 = tk.Canvas(master=optionsFrame, width=minUIWidth, height=4)
+        sepLine6.create_rectangle(0, 1, minUIWidth, 2, fill="black", outline = 'black')
         ####################################
 
         MANUALOBJNUM = list(range(1, 5))
 
         #Create drop down box for spesifiying the number objects for manual detection
-        self.noOfModels = tk.StringVar(self.manualSampelObjects)
+        self.noOfModels = tk.StringVar(manualSampelObjects)
 
-        self.mObjectsLbl = tk.Label(
-            master=self.manualSampelObjects,
+        mObjectsLbl = tk.Label(
+            master=manualSampelObjects,
             text="Number of Models",
         )
 
         self.mObjectsOpt = tk.OptionMenu(
-            self.manualSampelObjects, 
+            manualSampelObjects, 
             self.noOfModels, 
             *MANUALOBJNUM,
             command=self.update_ui_vals
         )
 
         #########--Seperator Line--#########
-        self.sepLine7 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
-        self.sepLine7.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        sepLine7 = tk.Canvas(master=universalSetting, width=minUIWidth, height=4)
+        sepLine7.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
-        self.universalLbl = tk.Label(
-            master=self.universalSetting,
+        universalLbl = tk.Label(
+            master=universalSetting,
             text="Universal Setting"
         )
 
         #########--Seperator Line--#########
-        self.sepLine8 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
-        self.sepLine8.create_rectangle(0, 1, self.minUIWidth, 3, fill="black", outline = 'black')
+        sepLine8 = tk.Canvas(master=universalSetting, width=minUIWidth, height=4)
+        sepLine8.create_rectangle(0, 1, minUIWidth, 3, fill="black", outline = 'black')
         ####################################
 
         #Create slider to indicate to time before certain
         self.certianTimeScl = tk.Scale(
-            master=self.universalSetting,
+            master=universalSetting,
             label="Time Before Dection Is Certain (Secs)",
             from_=5, 
             to=120,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
             command=self.update_ui_vals
         )
 
         #########--Seperator Line--#########
-        self.sepLine9 = tk.Canvas(master=self.universalSetting, width=self.minUIWidth, height=4)
-        self.sepLine9.create_rectangle(0, 1, self.minUIWidth, 2, fill="black", outline = 'black')
+        sepLine9 = tk.Canvas(master=universalSetting, width=minUIWidth, height=4)
+        sepLine9.create_rectangle(0, 1, minUIWidth, 2, fill="black", outline = 'black')
         ####################################
 
         #Create slider to indicate to time before certain
         self.failureRangeScl = tk.Scale(
-            master=self.universalSetting,
+            master=universalSetting,
             label="Horizontal Failure Range",
             from_=5, 
             to=100,
             sliderlength=20, 
-            length=self.minUIWidth,
+            length=minUIWidth,
             orient= tk.HORIZONTAL,
-            command=self.update_ui_vals
+            command= self.update_failure_range
         )
 
         #set the intrface starting values 
         self.update_ui_interface()
 
         #--Dispay UI Elements--
-        self.videoFrame.pack(side=tk.RIGHT)
-        self.optionsFrame.pack()
-        self.manualSampelObjects.pack()
-        self.universalSetting.pack()
+        guiContatianer.grid(row=0, column=0)
+        feedContatianer.grid(row=0, column=1)
 
-        self.startSep.pack()#-------
+        videoFrame.pack()
+        optionsFrame.pack()
+        manualSampelObjects.pack()
+        universalSetting.pack()
+
+        startSep.pack()#-------
         self.autoStatusLbl.pack()#
-        self.sepLine1.pack()#------
+        sepLine1.pack()#------
         self.vividChk.pack()
-        self.sepLine2.pack()#------
+        sepLine2.pack()#------
         self.sensitivityScl.pack()
-        self.sepLine3.pack()#------
+        sepLine3.pack()#------
         self.cutBottomScl.pack()
         self.simetricalXcutScl.pack()
         self.cutLeftScl.pack()
         self.cutRightScl.pack()
-        self.sepLine4.pack()#------
-        self.manualLbl.pack()#
-        self.sepLine5.pack()#------
+        sepLine4.pack()#------
+        manualLbl.pack()#
+        sepLine5.pack()#------
         self.manaulSelectBtn.pack()
-        self.sepLine6.pack()#------
-        self.mObjectsLbl.grid(row=0, column=0)
+        sepLine6.pack()#------
+        mObjectsLbl.grid(row=0, column=0)
         self.mObjectsOpt.grid(row=0, column=1)
-        self.sepLine7.pack()#------
-        self.universalLbl.pack()#
-        self.sepLine8.pack()#------
+        sepLine7.pack()#------
+        universalLbl.pack()#
+        sepLine8.pack()#------
         self.certianTimeScl.pack()
-        self.sepLine9.pack()#------
+        sepLine9.pack()#------
         self.failureRangeScl.pack()
 
         self.canvas.pack()
@@ -275,10 +275,20 @@ class UI:
         self.certianTimeScl.set(certianTimeScl)
         self.failureRangeScl.set(failureRangeScl)
 
+    def update_crop(self, value=0):
+        self.update_ui_vals(0, "Crop")
+
+    def update_sensitivity(self, value=0):
+        self.update_ui_vals(0, "Sensitivity")
+
+    def update_failure_range(self, value=0):
+        self.update_ui_vals(0, "FailureRange")
+
     #change the values of the uiValues class
-    def update_ui_vals(self, value=0):
+    def update_ui_vals(self, value=0, widgetName="NonImp"):
 
         self.valuesChange = True
+        self.widgetName = widgetName
 
         vivid = self.vivid.get()
         certianTimeScl = self.certianTimeScl.get()

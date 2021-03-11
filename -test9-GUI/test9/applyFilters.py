@@ -60,8 +60,8 @@ class ApFil:
         #Filter out low saturation
         enhance = cv2.addWeighted(croppedFrame, 1, np.zeros(croppedFrame.shape, croppedFrame.dtype), 0, 0)
         hsv = cv2.cvtColor(enhance, cv2.COLOR_BGR2HSV)
-        hue ,saturation ,value = cv2.split(hsv)                                                  
-        retval, thresholded = cv2.threshold(saturation, self.vivid, 255, cv2.THRESH_BINARY)
+        _ ,saturation ,_ = cv2.split(hsv)                                                  
+        _, thresholded = cv2.threshold(saturation, self.vivid, 255, cv2.THRESH_BINARY)
         dilatedSaturation = thresholded #cv2.dilate(thresholded, None, iterations=2)
 
         #Combine the filters
@@ -75,24 +75,28 @@ class ApFil:
         
         return self.topCut, finalHeightFilter
 
+
+    #CROP THE SIDES FIRST AND REDUCE THE SIZE THRESHOLD TO MATCH OR REDUCE THE RESELUTION
     def get_height_crop(self, testingFrame):
         highestMovingObject = self.vidHeight/2
 
         if np.any(self.oldTestingFrame):
-            diff = cv2.absdiff(testingFrame, self.oldTestingFrame)
+            cropTestingFrame = testingFrame[0:self.bottomCut, self.leftCut:self.rightCut]
+            cropOldFrame = self.oldTestingFrame[0:self.bottomCut, self.leftCut:self.rightCut]
+
+            diff = cv2.absdiff(cropTestingFrame, cropOldFrame)
             gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-            blur = cv2.GaussianBlur(gray, (5,5), 0)
-            _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
-            dilated = cv2.dilate(thresh, None, iterations=3)
-            contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            _, thresh = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
+            contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
-                (x, y, w, h) = cv2.boundingRect(contour)
+                (_, y, _, h) = cv2.boundingRect(contour)
 
-                if cv2.contourArea(contour) < 10000:
+                if cv2.contourArea(contour) < 4000:
                     continue
                 if highestMovingObject > (y+h):
                     highestMovingObject = (y+h)
+                    break
 
         self.oldTestingFrame = testingFrame.copy()
         self.topCut = int(highestMovingObject)
@@ -103,13 +107,14 @@ class ApFil:
 
         contours, _ = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        for contour in contours:
-            (x, y, w, h) = cv2.boundingRect(contour)
+        for contour in reversed(contours):
+            (_, y, _, _) = cv2.boundingRect(contour)
 
             if cv2.contourArea(contour) < self.sensitivity:
                 continue
-            if lowestObjects < (y - 10):
-                lowestObjects = (y - 10)
+            if lowestObjects < (y - 5):
+                lowestObjects = (y - 5)
+                break
 
         cv2.rectangle(frame, (0, 0), (frameWidth, lowestObjects), (0,0, 0), -1)
         return frame

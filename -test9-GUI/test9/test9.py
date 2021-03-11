@@ -13,6 +13,8 @@ import manualDetection
 import failureAlert
 import uiValues
 
+import constants
+
 class App:
     def __init__(self, window, window_title, video_source=0):
         self.window = window
@@ -20,7 +22,6 @@ class App:
 
         #Set timer
         self.scanPrev = 0.0
-        self.filterFPS = 1
 
         #Set classes
         self.vid = readCapture.VideoCapture(video_source)
@@ -30,7 +31,7 @@ class App:
         self.uiVals = uiValues.UIVals(self.vidWidth, self.vidHeight)
         self.ui = initialiseUI.UI(self.vidWidth, self.vidHeight, self.uiVals)
 
-        self.initFrame = initialisingFrame.InitFrames(self.vidWidth, self.vidHeight, self.filterFPS)
+        self.initFrame = initialisingFrame.InitFrames(self.vidWidth, self.vidHeight)
         self.initFrame.update_ui_values(self.uiVals)
         self.currentAutoInitStatus = 0 # 0=ENGAGED, 1=STARTING, 2=DETECTING, 3=OFF 
 
@@ -45,7 +46,7 @@ class App:
         self.topCut = 0
 
         #Update Camera Frame
-        self.delay = 15
+        self.delay = 30 #15
         self.update()
 
         self.window.mainloop()
@@ -61,7 +62,7 @@ class App:
                 frame = self.manual_detection(frame)
 
             if self.ui.valuesChange:
-                frame, self.ui.valuesChange = self.displayUiChanges(frame)
+                frame, self.ui.valuesChange = self.display_ui_changes(frame)
 
             if self.objFail == True:
                 failureAlert.alert(frame)
@@ -75,29 +76,35 @@ class App:
 
     def scan(self, frame): 
         time_elapsed = time.time() - self.scanPrev
-        if time_elapsed > 1./self.filterFPS:
+        if time_elapsed > 1./constants.FILTER_FPS:
             self.scanPrev = time.time()
 
+            #update status
+            self.currentAutoInitStatus = self.initFrame.motion_scan(frame, self.currentAutoInitStatus)
+
             if self.currentAutoInitStatus == 0:
-                self.ui.autoStatusLbl.config(text="Automatic Detection (-ENGAGED-)")
-                self.currentAutoInitStatus = self.initFrame.starting_motion_scan(frame)
+                if self.initialisedAutomaticsFilters:
+                    self.automatic.clear_objects(self)
+                    self.initialisedAutomaticsFilters = False
+                self.ui.autoStatusLbl.config(text="Automatic Detection (-ENGAGED-)")  
+                
             elif self.currentAutoInitStatus == 1:
                 self.ui.autoStatusLbl.config(text="Automatic Detection (-STARTING-)")
                 self.currentAutoInitStatus, grayNFrame = self.initFrame.capture_initialising_frames(frame)
                 return grayNFrame
+
             elif self.currentAutoInitStatus == 2:
                 if not self.initialisedAutomaticsFilters:
                     self.ui.autoStatusLbl.config(text="Automatic Detection (-DETECTING-)")
-                    self.initialisedAutomaticsFilters = self.automatic.initialiseApplyFilters(self.vidWidth, self.vidHeight, self.ui, self.initFrame.initialFrames)
-                    self.automatic.update_ui_values(self.uiVals, self.filterFPS)
-                self.currentAutoInitStatus = self.initFrame.stopped_motion_scan(frame)
+                    self.initialisedAutomaticsFilters = self.automatic.initialise_apply_filters(self.vidWidth, self.vidHeight, self.initFrame.initialFrames)
+                    self.automatic.update_ui_values(self.uiVals)
                 self.topCut, self.objFail = self.automatic.get_contours(frame)
-            else:
-                self.currentAutoInitStatus = self.initFrame.stopped_motion_scan(frame)
-            
+
         #Give the appropriate info on GUI camera view 
-        drawnOnFrame = self.automatic.draw_detection_results(frame)        
-        return cv2.cvtColor(drawnOnFrame, cv2.COLOR_BGR2RGB)
+        if self.currentAutoInitStatus == 2:
+            frame = self.automatic.draw_detection_results(frame)  
+            
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     def manual_detection(self, frame):
         editedframe = frame
@@ -108,7 +115,7 @@ class App:
                 if self.objFail: 
                     self.ui.start_manual()
             else:
-                editedframe = self.manual.manual_object_seletion(frame, self.ui.noOfModels.get())
+                editedframe = self.manual.manual_object_seletion(frame, self.uiVals.noOfModels )
         else:
             #Stop automatic detection and Start Manual 
             self.currentAutoInitStatus = 3
@@ -122,31 +129,36 @@ class App:
 
         return cv2.cvtColor(editedframe, cv2.COLOR_BGR2RGB)
 
-    def displayUiChanges(self, frame):
-        #Gets a new frame for update() and proccesses it
-        leftCut = self.ui.cutLeftScl.get()
-        rightCut = (self.vidWidth - self.ui.cutRightScl.get())
-        bottomCut = (self.vidHeight - self.ui.cutBottomScl.get())
+    def display_ui_changes(self, frame):
+        fr = self.uiVals.failureRangeScl 
 
-        cropImg = np.zeros((self.vidHeight, self.vidWidth, 3), np.uint8)
-        cropImg = cv2.rectangle(cropImg, (leftCut, self.topCut), (rightCut, bottomCut), (255, 255, 255), -1)
+        if self.ui.widgetName == "Crop": 
+            #Gets a new frame for update() and proccesses it
+            leftCut = self.uiVals.cutLeftScl
+            rightCut = (self.vidWidth - self.uiVals.cutRightScl)
+            bottomCut = (self.vidHeight - self.uiVals.cutBottomScl)
 
-        frame = cv2.addWeighted(frame, 0.8, cropImg, 0.2, 0)
+            cropImg = np.zeros((self.vidHeight, self.vidWidth, 3), np.uint8)
+            cropImg = cv2.rectangle(cropImg, (leftCut, self.topCut), (rightCut, bottomCut), (255, 255, 255), -1)
 
-        boxSides = round(math.sqrt(self.ui.sensitivityScl.get()))
-        x = int(self.vidWidth/2 - boxSides/2)
-        y = int(self.vidHeight/2 - boxSides/2)
-        cv2.rectangle(frame, (x, y), (boxSides+x,boxSides+y), (255, 255, 255), 2)
+            frame = cv2.addWeighted(frame, 0.8, cropImg, 0.2, 0)
 
-        cv2.line(frame, (int(self.vidWidth/2), 0), (int(self.vidWidth/2),self.vidHeight), (255, 0, 0), 2)
-        cv2.line(frame, (int(self.vidWidth/2 - self.ui.failureRangeScl.get()), 0), (int(self.vidWidth/2 - self.ui.failureRangeScl.get()),self.vidHeight), (0, 255, 0), 2)
-        cv2.line(frame, (int(self.vidWidth/2 + self.ui.failureRangeScl.get()), 0), (int(self.vidWidth/2 + self.ui.failureRangeScl.get()),self.vidHeight), (0, 255, 0), 2)
+        elif self.ui.widgetName == "Sensitivity":
+            boxSides = round(math.sqrt(self.uiVals.sensitivityScl))
+            x = int(self.vidWidth/2 - boxSides/2)
+            y = int(self.vidHeight/2 - boxSides/2)
+            cv2.rectangle(frame, (x, y), (boxSides+x,boxSides+y), (255, 255, 255), 2)
+
+        elif self.ui.widgetName == "FailureRange":
+            cv2.line(frame, (int(self.vidWidth/2), 0), (int(self.vidWidth/2),self.vidHeight), (255, 0, 0), 2)
+            cv2.line(frame, (int(self.vidWidth/2 - fr), 0), (int(self.vidWidth/2 - fr),self.vidHeight), (0, 255, 0), 2)
+            cv2.line(frame, (int(self.vidWidth/2 + fr), 0), (int(self.vidWidth/2 + fr),self.vidHeight), (0, 255, 0), 2)
 
         if not self.manual:
-            self.automatic.update_ui_values(self.uiVals, self.filterFPS)
+            self.automatic.update_ui_values(self.uiVals)
             self.initFrame.update_ui_values(self.uiVals)
         else:
-            self.manual.set_ui_values(self.ui.failureRangeScl.get())
+            self.manual.set_ui_values(fr)
 
         return frame, False
 

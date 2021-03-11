@@ -1,16 +1,14 @@
 import cv2
-import numpy as np
 
 import applyFilters
 import detectedObject
 
-def rect_over_lap_check(contourRect, objectRect):
-    #contourRectLeft = contourRect[0]                           objectRectLeft = objectRect[0]
-    #contourRectRight = contourRect[0] + contourRect[2]         objectRectRight = objectRect[0] + objectRect[2]
-    #contourRectTop = contourRect[1]                            objectRectTop = objectRect[1]
-    #contourRectBottom = contourRect[1] + contourRect[3]        objectRectBottom = objectRect[1] + objectRect[3]
+import constants
 
+def rect_over_lap_check(contourRect, objectRect):
+    #intersect width = the furthest left, right side - the furthest right, left side
     intersectW = min((contourRect[0] + contourRect[2]), (objectRect[0] + objectRect[2])) - max(contourRect[0], objectRect[0])
+    #intersect height = the hightest, object bottom - the lowest, object top
     intersectH = min((contourRect[1] + contourRect[3]), (objectRect[1] + objectRect[3])) - max(contourRect[1], objectRect[1])
 
     if intersectW < 0 or intersectH < 0:
@@ -24,11 +22,14 @@ class AutoDect:
         self.objects = []
         self.filter = None
 
+    def clear_objects(self):
+        self.objects.clear()
+
     #When the user updates the UI, the main app calls this function to update the UI valuse 
-    def update_ui_values(self, uiVals, filterFPS):
+    def update_ui_values(self, uiVals):
         #If potential object exists for minsBeforeCertain (seconds) its a definite object - i.e defObjectConFrames = minsBeforeCertain * filterFPS
-        self.defObjectFail = 10 * filterFPS #seconds
-        self.defObjectConFrames = filterFPS * uiVals.certianTimeScl
+        self.defObjectFail = constants.FAILER_TIMER * constants.FILTER_FPS #seconds
+        self.defObjectConFrames = constants.FILTER_FPS * uiVals.certianTimeScl
         self.failureCenterRange = uiVals.failureRangeScl
         self.leftCut = uiVals.cutLeftScl
         self.objSizeThresh = uiVals.sensitivityScl
@@ -36,17 +37,17 @@ class AutoDect:
         if self.filter:
             self.filter.update_ui_values(uiVals)
 
-    def initialiseApplyFilters(self, vidWidth, vidHeight, ui, initFrames):
+    def initialise_apply_filters(self, vidWidth, vidHeight, initFrames):
         self.filter = applyFilters.ApFil(vidWidth, vidHeight, initFrames)
         return True
 
     def get_contours(self, frame):
         #Filter current frame
         topCut, filteredFrame = self.filter.filter_frame(frame)
-        cv2.imshow("filter", filteredFrame)
+        #cv2.imshow("filter", filteredFrame)
 
         #Get object contours from filterd frame
-        contours, hierarchy = cv2.findContours(filteredFrame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(filteredFrame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         newPotentialObjects = []
 
@@ -62,7 +63,7 @@ class AutoDect:
 
             for obj in self.objects:
                 avgLoc, cons, miss = obj.get_avr_obj()
-                intersectWidth, intersectHeight, intersect = rect_over_lap_check(tuple([cx, cy, cw, ch]), avgLoc)
+                intersectWidth, intersectHeight, intersect = rect_over_lap_check(list((cx, cy, cw, ch)), avgLoc)
                 if intersect:
 
                     objCenterLineMin = int(avgLoc[0] + (avgLoc[2]/2)) - self.failureCenterRange
@@ -75,7 +76,8 @@ class AutoDect:
                                 missDegrader = -1 #to insure the miss counter never goes below -1 
                                 if miss < 1: missDegrader = 0
                                 obj.set_avr_obj(tuple([cx, cy, cw, ch]), 1, missDegrader)
-                            else:
+                            
+                            if cons + 1 >= self.defObjectConFrames:
                                 obj.set_avr_obj(tuple([0, 0, 0, 0]), 0, -miss)
 
                     newPotentialObject = False
@@ -146,10 +148,10 @@ class AutoDect:
         for obj in self.objects:
             avgLoc, cons, misses = obj.get_avr_obj()
             if cons < self.defObjectConFrames:
-                cv2.rectangle(copyFrame, avgLoc, blue, 2)
+                cv2.rectangle(copyFrame,  (avgLoc[0], avgLoc[1]),  (avgLoc[2]+avgLoc[0], avgLoc[3]+avgLoc[1]), blue, 2)
                 cv2.putText(copyFrame, "pO "+str(cons)+" "+str(misses), (avgLoc[0], avgLoc[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, blue, 1)
             else:
-                cv2.rectangle(copyFrame, avgLoc, red, 2)
+                cv2.rectangle(copyFrame, (avgLoc[0], avgLoc[1]),  (avgLoc[2]+avgLoc[0], avgLoc[3]+avgLoc[1]), red, 2)
                 cv2.putText(copyFrame, "dO "+str(cons)+" "+str(misses), (avgLoc[0], avgLoc[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, red, 1)
 
         return copyFrame

@@ -24,7 +24,7 @@ class Obj:
         return self.loc, self.cons, self.miss
 
     def get_avr_obj(self):
-        averagedLoc = [int(val/self.cons) for val in self.loc]
+        averagedLoc = list(int(val/self.cons) for val in self.loc)
         return averagedLoc, self.cons, self.miss
 
 
