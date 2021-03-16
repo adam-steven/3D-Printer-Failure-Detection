@@ -10,18 +10,19 @@ class ApFil:
         self.vidHeight = vidHeight
         self.oldTestingFrame = []
 
+        #captured frames from initialisingFrame.py
         self.initFrames = initFrames
 
+        #openCV background subtractor (gives the outline of every moving object)
         self.movingEdge = cv2.bgsegm.createBackgroundSubtractorMOG()
 
         #Timer
         self.hightPrev = 0.0
         self.hightFrameRate = 1
 
-        self.kernel = np.ones((5,5),np.uint8)
-
         self.topCut = 10
 
+    #Save the needed GUI values
     def update_ui_values(self, uiVals):
         self.leftCut = uiVals.cutLeftScl
         self.rightCut = self.vidWidth - uiVals.cutRightScl
@@ -67,20 +68,23 @@ class ApFil:
         #Combine the filters
         filterSum = cv2.bitwise_and(backFiltSum, fgmaskInvert)
         filterSum = cv2.bitwise_and(filterSum, dilatedSaturation)
-        #medianFiltered = cv2.medianBlur(filterSum, 3)
-        closing = cv2.morphologyEx(filterSum, cv2.MORPH_CLOSE, self.kernel)
+
+        #Close any small holes in the non-detected BLOBS
+        kernel = np.ones((5,5),np.uint8)
+        closing = cv2.morphologyEx(filterSum, cv2.MORPH_CLOSE, kernel)
 
         #Filter out everything above the lowest detected remaining objects 
         finalHeightFilter = self.get_low_crop(closing, (self.rightCut - self.leftCut))
         
         return self.topCut, finalHeightFilter
 
-
-    #CROP THE SIDES FIRST AND REDUCE THE SIZE THRESHOLD TO MATCH OR REDUCE THE RESELUTION
+    #Find the bottom of highest moving object and crop everything above it 
     def get_height_crop(self, testingFrame):
-        highestMovingObject = self.vidHeight/2
+        #If the highest noving object is lower than half the screen only crop have the screen 
+        highestMovingObject = self.vidHeight/2 
 
         if np.any(self.oldTestingFrame):
+            #Find the difference between 2 simultanious frames as BLOBs
             cropTestingFrame = testingFrame[0:self.bottomCut, self.leftCut:self.rightCut]
             cropOldFrame = self.oldTestingFrame[0:self.bottomCut, self.leftCut:self.rightCut]
 
@@ -101,21 +105,21 @@ class ApFil:
         self.oldTestingFrame = testingFrame.copy()
         self.topCut = int(highestMovingObject)
 
+    #Delete all detected objects other than the lowest one (to keep only the print(s))
     def get_low_crop(self, frame, frameWidth):
-        #Delete all detected objects other than the lowest one (to keep only the print(s))
         lowestObjects = 0
 
         contours, _ = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        for contour in reversed(contours):
+        for contour in contours:
             (_, y, _, _) = cv2.boundingRect(contour)
 
             if cv2.contourArea(contour) < self.sensitivity:
                 continue
             if lowestObjects < (y - 5):
                 lowestObjects = (y - 5)
-                break
 
+        #Black rectange drawn to remove the top objects
         cv2.rectangle(frame, (0, 0), (frameWidth, lowestObjects), (0,0, 0), -1)
         return frame
 

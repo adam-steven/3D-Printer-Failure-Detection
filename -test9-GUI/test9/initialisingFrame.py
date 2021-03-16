@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
-import constants
+from constants import FILTER_FPS, FSM_TIMER, STARTING_STATE_FAIL_SAFE
 
+#BLOB detection to get moving objects
 def get_contours(currentFrame, oldFrame):
     diff = cv2.absdiff(currentFrame, oldFrame)
     gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
@@ -26,10 +27,10 @@ class InitFrames:
         self.motionDetectionCounter = 0
         self.printStartedCounter = 0
 
-        #If timeBeforeSwitching = 5 (seconds) - self.statusSwitchingThreshold = 10 = timeBeforeSwitching * filterFPS
-        self.statusSwitchingThreshold = constants.FILTER_FPS * constants.FSM_TIMER
+        #Convert FSM_TIMER to seconds by taking the FPS into account
+        self.statusSwitchingThreshold = FILTER_FPS * FSM_TIMER
 
-
+    #Save the needed GUI values
     def update_ui_values(self, uiVals):
         self.leftCut = int(uiVals.cutLeftScl/2)
         self.rightCut = int((self.vidWidth - uiVals.cutRightScl)/2)
@@ -42,15 +43,15 @@ class InitFrames:
         if np.any(self.oldFrame):
             contours = get_contours(currentFrame, self.oldFrame)
 
-            
             movingObjectDetected = False
 
             for contour in contours:
-                if cv2.contourArea(contour) < 200:
+                if cv2.contourArea(contour) < 200: #BLOB area check to ignore any inital plastic leak
                     continue
                 movingObjectDetected = True
                 break
 
+            #If motion detected and in the ENGAGED state move to STARTING
             if movingObjectDetected == True: 
                 self.motionDetectionCounter += 1
                 if self.motionDetectionCounter > self.statusSwitchingThreshold:
@@ -58,6 +59,7 @@ class InitFrames:
                     if status == 0:
                         self.initialFrames.clear()
                         status = 1 
+            #If motion not detected and in the OFF state move to ENGAGED
             else:
                 self.motionDetectionCounter -= 1
                 if self.motionDetectionCounter < 0:
@@ -94,7 +96,7 @@ class InitFrames:
         if bigMovingObjectDetected == True:
             self.printStartedCounter = self.printStartedCounter + 1
 
-        if self.printStartedCounter > self.statusSwitchingThreshold:
+        if self.printStartedCounter > self.statusSwitchingThreshold or len(self.initialFrames) >= STARTING_STATE_FAIL_SAFE:
             self.printStartedCounter = 0
             status = 2
 

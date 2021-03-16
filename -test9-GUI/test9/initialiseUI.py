@@ -1,4 +1,5 @@
 import tkinter as tk
+from constants import GUI_WIDTH
 
 #Initilise and handle tkinter ui elements
 class UI:
@@ -17,7 +18,7 @@ class UI:
         manualSampelObjects = tk.Frame(guiContatianer)
         universalSetting = tk.Frame(guiContatianer)
         videoFrame = tk.Frame(feedContatianer)
-        minUIWidth = 200
+        minUIWidth = GUI_WIDTH
 
 
         #--Initialise UI Elements--
@@ -95,7 +96,8 @@ class UI:
             text='Simetrical X Cut Off',
             variable=self.simetricalXcut,
             onvalue=True,
-            offvalue=False
+            offvalue=False,
+            command=self.update_crop
         )
         self.simetricalXcut.set(True)
 
@@ -254,6 +256,7 @@ class UI:
 
         self.canvas.pack()
 
+    #start and stop manual detection on button press
     def start_manual(self):
         if self.manualHasStarted == 0:
             self.manualHasStarted = True
@@ -262,7 +265,7 @@ class UI:
             self.manualHasStopped = True
             self.manaulSelectBtn.config(text="Start Manual Detection")
 
-    #change the values for the gui interface options
+    #Change the values for the gui interface options from uiValues.py
     def update_ui_interface(self): 
         vivid, certianTimeScl, failureRangeScl, cutLeftScl, cutRightScl, cutBottomScl, sensitivityScl, noOfModels = self.uiVals.get_vals()
 
@@ -275,17 +278,19 @@ class UI:
         self.certianTimeScl.set(certianTimeScl)
         self.failureRangeScl.set(failureRangeScl)
 
-    def update_crop(self, value=0):
-        self.update_ui_vals(0, "Crop")
+    #----Specify specific GUI elements are being changed----
+    def update_crop(self, _=0):
+        self.update_ui_vals(_, "Crop")
 
-    def update_sensitivity(self, value=0):
-        self.update_ui_vals(0, "Sensitivity")
+    def update_sensitivity(self, _=0):
+        self.update_ui_vals(_, "Sensitivity")
 
-    def update_failure_range(self, value=0):
-        self.update_ui_vals(0, "FailureRange")
+    def update_failure_range(self, _=0):
+        self.update_ui_vals(_, "FailureRange")
+    #-------------------------------------------------------
 
-    #change the values of the uiValues class
-    def update_ui_vals(self, value=0, widgetName="NonImp"):
+    #Change the values of the uiValues class
+    def update_ui_vals(self, _=0, widgetName="NonImp"):
 
         self.valuesChange = True
         self.widgetName = widgetName

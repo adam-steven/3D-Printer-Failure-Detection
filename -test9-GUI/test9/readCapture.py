@@ -1,5 +1,5 @@
 import cv2
-import constants
+from constants import FRAME_WIDTH, FRAME_HEIGHT
 
 #OpenCV Video Retrieval
 class VideoCapture:
@@ -11,8 +11,8 @@ class VideoCapture:
             raise ValueError("Unable to open video source", video_source)
 
         #Set video source width and height
-        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, constants.FRAME_WIDTH)
-        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, constants.FRAME_HEIGHT)
+        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
+        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
         #Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -26,13 +26,12 @@ class VideoCapture:
             self.vid.release()
             self.window.mainloop()
 
+    #Read the video source information 
     def get_frame(self):
         if self.vid.isOpened():
             ret, frame = self.vid.read()
             if ret:
                 return (ret, frame)
-            else:
-                return (ret, None)
-        else:
-            return (ret, None)
+
+        return (False, None)
 

@@ -27,6 +27,9 @@
     <Compile Include="automaticDetection.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="constants.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="detectedObject.py">
       <SubType>Code</SubType>
     </Compile>
