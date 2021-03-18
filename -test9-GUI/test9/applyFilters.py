@@ -91,7 +91,7 @@ class ApFil:
             diff = cv2.absdiff(cropTestingFrame, cropOldFrame)
             gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
             _, thresh = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
-            contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
                 (_, y, _, h) = cv2.boundingRect(contour)
@@ -109,7 +109,7 @@ class ApFil:
     def get_low_crop(self, frame, frameWidth):
         lowestObjects = 0
 
-        contours, _ = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
             (_, y, _, _) = cv2.boundingRect(contour)

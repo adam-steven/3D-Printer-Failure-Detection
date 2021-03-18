@@ -52,7 +52,7 @@ class AutoDect:
         #cv2.imshow("filter", filteredFrame)
 
         #Get object contours from filterd frame
-        contours, _ = cv2.findContours(filteredFrame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(filteredFrame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         newPotentialObjects = []
 
