@@ -7,7 +7,7 @@ class UIVals:
         self.cutLeftScl = int((vidWidth/2)/2)
         self.cutRightScl = int((vidWidth/2)/2)
         self.cutBottomScl = int((vidHeight/2)/3)
-        self.sensitivityScl = 400
+        self.sensitivityScl = 300
         self.noOfModels = 1
 
     def set_vals(self, vivid, certianTimeScl, failureRangeScl, cutLeftScl, cutRightScl, cutBottomScl, sensitivityScl, noOfModels):

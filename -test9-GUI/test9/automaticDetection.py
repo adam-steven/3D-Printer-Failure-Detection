@@ -13,9 +13,9 @@ def rect_over_lap_check(contourRect, objectRect):
     intersectH = min((contourRect[1] + contourRect[3]), (objectRect[1] + objectRect[3])) - max(contourRect[1], objectRect[1])
 
     if intersectW < 0 or intersectH < 0:
-        return 0, 0, False
+        return 0, False
 
-    return intersectW, intersectH, True
+    return intersectW, True
 
 #Detects contours > potential objects > confirmed objects
 class AutoDect:
@@ -72,7 +72,7 @@ class AutoDect:
             for obj in self.objects:
                 #Check if the current contour and object are touching
                 avgLoc, cons, miss = obj.get_avr_obj()
-                intersectWidth, intersectHeight, intersect = rect_over_lap_check(list((cx, cy, cw, ch)), avgLoc)
+                intersectWidth, intersect = rect_over_lap_check(list((cx, cy, cw, ch)), avgLoc)
 
                 #If they are touching (its a recurring object)
                 if intersect:
@@ -82,7 +82,7 @@ class AutoDect:
                     contCenterLine = int(cx + (cw/2))
                     
                     #If the contour & object interct is geater that a 3rd of the object's size
-                    if intersectWidth > int(avgLoc[2]/1.5) and intersectHeight > int(avgLoc[3]/1.5):
+                    if intersectWidth > int(avgLoc[2]/1.5):
                         #If the contour's horizontal center = the object's horizontal center +- self.failureCenterRange
                         if objCenterLineMin < contCenterLine < objCenterLineMax:
                             obj.set_avr_obj(tuple([cx, cy, cw, ch]), 1, -1) #Add the counter's values to the object
@@ -125,7 +125,7 @@ class AutoDect:
                     avgLocJ, consJ, missJ = objJ.get_avr_obj()
 
                     #check if the objects are touching
-                    _, _, intersect = rect_over_lap_check(avgLocI, avgLocJ)
+                    _, intersect = rect_over_lap_check(avgLocI, avgLocJ)
                     if intersect and missI > -1000 and missJ > -1000:
 
                         objJCenterLineMin = int(avgLocJ[0] + (avgLocJ[2]/2)) - self.failureCenterRange
