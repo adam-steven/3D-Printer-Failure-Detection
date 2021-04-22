@@ -10,7 +10,7 @@ TO_EMAIL_ADDRESS = "" #reciever email address
 
 #Main app
 FILTER_FPS = 1 #how many frames are proccessed per SECONDS
-FAILER_TIMER = 10  #how many SECONDS of missed modle detection before a failure is garenteed 
+FAILER_TIMER = 15  #how many SECONDS of missed modle detection before a failure is garenteed 
 
 #Initialising frame variables
 FSM_TIMER = 5 #how many SECONDS of movement detection before the detection state switchs (ENGAGED -> STARTING -> DETECTING | OFF -> ENGAGED)
