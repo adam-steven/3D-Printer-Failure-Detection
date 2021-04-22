@@ -47,7 +47,7 @@ class App:
         self.topCut = 0
 
         #Update Camera Frame
-        self.delay = 30
+        self.delay = 1
         self.update()
 
         self.window.mainloop()
