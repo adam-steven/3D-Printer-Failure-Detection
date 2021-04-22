@@ -92,7 +92,7 @@ class App:
             if self.currentAutoInitStatus == 0:
                 #Clear previous objects and forget about previous applyFilters.py initilisations
                 if self.initialisedAutomaticsFilters:
-                    self.automatic.clear_objects(self)
+                    self.automatic.clear_objects()
                     self.initialisedAutomaticsFilters = False
                 self.ui.autoStatusLbl.config(text="Automatic Detection (-ENGAGED-)")  
             #If STARTING   
